@@ -5,8 +5,47 @@
 #include <vector>
 #include <sstream>
 #include <cstring>
+#include <windows.h>
+#include <queue>
+#include <mutex>
+#include <condition_variable>
+#include <thread>
 
 using namespace std;
+
+template <typename T>
+class JobQueue
+{
+	private:
+		queue<T> queue;
+		mutex mtx;
+		condition_variable cv;
+	public:
+		void push(T item)
+		{
+			unique_lock<mutex> lock(mtx);
+			queue.push(item);
+			lock.unlock();
+			cv.notify_one();
+		}
+		T pop()
+		{
+			unique_lock<mutex> lock(mtx);
+			while(queue.empty())
+			{
+				cv.wait(lock);
+			}
+			T item = queue.front();
+			queue.pop();
+			return item;
+		}
+		bool empty()
+		{
+			lock_guard<mutex> lock(mtx);
+			return queue.empty();
+		}
+};
+
 
 struct UserRecord
 {
@@ -15,6 +54,13 @@ struct UserRecord
 	int age;
 	bool active;
 };
+
+struct DBJob
+{
+	int operationType;
+	UserRecord temp;
+};
+
 
 class SimpleDB
 {
@@ -117,10 +163,39 @@ class SimpleDB
 			}
 };
 
+JobQueue<DBJob> workQueue;
+bool systemrunning = true;
+bool done = false;
+
+void backgroundWorker(SimpleDB* db)
+{
+	cout << "[System]: Background thread started." << endl;
+	while(systemrunning || !workQueue.empty())
+	{
+		DBJob job = workQueue.pop();
+		if(job.operationType == -1)
+		{
+			systemrunning = false;
+			break;
+		}
+		Sleep(10000);
+		if(job.operationType == 1)
+		{
+			db -> insertUser(job.temp.id, job.temp.username, job.temp.age);
+			cout << "Finished writing ID: " << job.temp.id<< endl;
+		}
+	}
+	cout << "[System]: Background thread stopped." << endl;
+	done = true;
+}
+
 int main()
 {
 	cout << "Welcome to KADatabase" << endl;
 	SimpleDB db("my_database.dat");
+
+	thread worker(backgroundWorker, &db);
+	worker.detach();
 
 	while(true)
 	{
@@ -141,7 +216,12 @@ int main()
 			getline(cin, name);
 
 			cout << "Enter Age: "; cin >> age;
-			db.insertUser(id, name, age);
+			UserRecord temp;
+			temp.id = id;
+			strncpy(temp.username, name.c_str(), 31);
+			temp.username[31] = '\0';
+			temp.age = age;
+			workQueue.push({1, temp});
 		}
 		else if(choice == 2)
 		{
@@ -155,7 +235,11 @@ int main()
 			db.getAllUser();
 		}
 		else
+		{
+			systemrunning = false;
+			while(!done){}
 			break;
+		}
 	}
 	return 0;
 }
