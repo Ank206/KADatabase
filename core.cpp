@@ -72,7 +72,7 @@ class SimpleDB
 			SimpleDB(string fname)
 			{
 				filename = fname;
-				file.open(filename, ios::in|ios::out|ios::binary|ios::app);
+				file.open(filename, ios::in|ios::out|ios::binary);
 
 				if(!file.is_open())
 				{
