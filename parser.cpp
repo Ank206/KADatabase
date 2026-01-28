@@ -1,13 +1,4 @@
-#include <iostream>
-#include <vector>
 using namespace std;
-
-struct commandStruct
-{
-	int type; // 0: create, 1: add, 2: delete
-	char tableName[32];
-	vector<string> tokens;
-};
 
 commandStruct parser(string command)
 {

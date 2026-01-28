@@ -10,6 +10,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <thread>
+#include "structures.cpp"
 #include "parser.cpp"
 #include "tableCreator.cpp"
 #include "metaReader.cpp"
@@ -211,7 +212,7 @@ int main()
 		if(temp.type == 0)
 		{
 			// request for table creation.
-
+			tableCreator(temp);
 		}
 		else if(temp.type == 1)
 		{
