@@ -10,6 +10,10 @@
 #include <mutex>
 #include <condition_variable>
 #include <thread>
+#include "parser.cpp"
+#include "tableCreator.cpp"
+#include "metaReader.cpp"
+#include "operations.cpp"
 
 using namespace std;
 
@@ -199,47 +203,70 @@ int main()
 
 	while(true)
 	{
-		cout << "\n 1. Add User  2. Get User  3. Get All Users  4. Exit" << endl;
-		cout << "Enter Choice: ";
-		int choice; cin >> choice;
-		cout << endl;
+		string command; 
+		getline(cin, command);
+		commandStruct temp = parser(command);
+		cout << temp.type << endl;
 
-		if(choice == 1)
+		if(temp.type == 0)
 		{
-			int id;
-			int age;
-			string name;
-			cout << "Enter ID: "; cin >> id;
-			cin.ignore();
+			// request for table creation.
 
-			cout << "Enter Name: "; 
-			getline(cin, name);
-
-			cout << "Enter Age: "; cin >> age;
-			UserRecord temp;
-			temp.id = id;
-			strncpy(temp.username, name.c_str(), 31);
-			temp.username[31] = '\0';
-			temp.age = age;
-			workQueue.push({1, temp});
 		}
-		else if(choice == 2)
+		else if(temp.type == 1)
 		{
-			int id;
-			cout << "Enter ID to search: ";
-			cin >> id;
-			db.getUser(id);
+
 		}
-		else if(choice == 3)
+		else if(temp.type == 2)
 		{
-			db.getAllUser();
+
 		}
 		else
 		{
-			systemrunning = false;
-			while(!done){}
-			break;
+			cout << "[ERROR]: Fatal Error, wrong command passed." << endl;
 		}
+
+		// cout << "\n 1. Add User  2. Get User  3. Get All Users  4. Exit" << endl;
+		// cout << "Enter Choice: ";
+		// int choice; cin >> choice;
+		// cout << endl;
+
+		// if(choice == 1)
+		// {
+		// 	int id;
+		// 	int age;
+		// 	string name;
+		// 	cout << "Enter ID: "; cin >> id;
+		// 	cin.ignore();
+
+		// 	cout << "Enter Name: "; 
+		// 	getline(cin, name);
+
+		// 	cout << "Enter Age: "; cin >> age;
+		// 	UserRecord temp;
+		// 	temp.id = id;
+		// 	strncpy(temp.username, name.c_str(), 31);
+		// 	temp.username[31] = '\0';
+		// 	temp.age = age;
+		// 	workQueue.push({1, temp});
+		// }
+		// else if(choice == 2)
+		// {
+		// 	int id;
+		// 	cout << "Enter ID to search: ";
+		// 	cin >> id;
+		// 	db.getUser(id);
+		// }
+		// else if(choice == 3)
+		// {
+		// 	db.getAllUser();
+		// }
+		// else
+		// {
+		// 	systemrunning = false;
+		// 	while(!done){}
+		// 	break;
+		// }
 	}
 	return 0;
 }
