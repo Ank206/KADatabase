@@ -216,7 +216,7 @@ int main()
 		}
 		else if(temp.type == 1)
 		{
-
+			write(temp);
 		}
 		else if(temp.type == 2)
 		{
