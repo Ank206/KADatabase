@@ -12,6 +12,14 @@ The project demonstrates low-level system programming concepts including binary 
     -   **Persistence:** All data is written to disk immediately using `fstream`.
     -   **Performance:** Data is indexed into RAM (`std::map`) at startup for instant retrieval.
 -   **Dynamic Schema:** Supports creating tables with variable column definitions (Integers and fixed-size Strings).
+  
+## 🔮 Further Goals (Roadmap)
+
+The current implementation is a foundational prototype. Future updates aim to introduce:
+
+1.  **Soft Deletes:** Implementing an `is_deleted` flag in the record schema to mark records as inactive without immediately removing them from disk, allowing for data recovery, and O(1) deletion.
+2.  **Vacuum/Cleanup:** A maintenance utility to permanently remove "soft deleted" records and defragment the `.dat` files to reclaim storage space.
+3.  **Concurrency (Producer-Consumer):** Decoupling the command parser from the disk I/O using a thread pool and a job queue. This will allow the engine to handle multiple operations asynchronously using 2+ threads.
 
 ## 🛠️ Tech Stack
 
