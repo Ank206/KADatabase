@@ -1,4 +1,4 @@
 *.exe
 .env
 .env.local
-
+*.dat
