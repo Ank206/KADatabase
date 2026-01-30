@@ -39,7 +39,7 @@ commandStruct parser(string command)
 		temp.tableName[31] = '\0';
 		temp.tokens = tokens;
 	}
-	else if(tokens[1] == "delete")
+	else if(tokens[1] == "get")
 	{	
 		temp.type = 2;
 		strncpy(temp.tableName, tokens[0].c_str(), 31);

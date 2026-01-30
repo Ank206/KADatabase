@@ -10,6 +10,8 @@
 #include <mutex>
 #include <condition_variable>
 #include <thread>
+#include <filesystem>
+#include <map>
 #include "structures.cpp"
 #include "parser.cpp"
 #include "tableCreator.cpp"
@@ -168,6 +170,7 @@ class SimpleDB
 			}
 };
 
+map<string, map<int, string>> main_map;
 JobQueue<DBJob> workQueue;
 bool systemrunning = true;
 bool done = false;
@@ -197,17 +200,17 @@ void backgroundWorker(SimpleDB* db)
 int main()
 {
 	cout << "Welcome to KADatabase" << endl;
-	SimpleDB db("my_database.dat");
+	// SimpleDB db("my_database.dat");
 
-	thread worker(backgroundWorker, &db);
-	worker.detach();
+	// thread worker(backgroundWorker, &db);
+	// worker.detach();
 
 	while(true)
 	{
 		string command; 
 		getline(cin, command);
 		commandStruct temp = parser(command);
-		cout << temp.type << endl;
+		// cout << temp.type << endl;
 
 		if(temp.type == 0)
 		{
@@ -220,7 +223,8 @@ int main()
 		}
 		else if(temp.type == 2)
 		{
-
+			indexation(main_map);
+			read(temp, main_map);
 		}
 		else
 		{

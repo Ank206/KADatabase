@@ -40,8 +40,85 @@ void write(commandStruct input)
 		else
 			file.write((char*)& sn, cols[i].second);
 	}
+	file.close();
 }
-void read(commandStruct input)
+void indexation(map<string, map<int, string>> &main_map)
 {
-	
+	vector<string> dat_files;
+	string path = ".";
+	for(const auto&entry : filesystem::directory_iterator(path))
+	{
+		if(entry.is_regular_file() && entry.path().extension() == ".dat")
+		{
+			dat_files.push_back(entry.path().stem().string());
+		}
+	}
+	// cout << "Filename fetching done." << endl;
+	for(auto filename: dat_files)
+	{
+		fstream file;
+		file.open(filename + ".dat", ios::in|ios::binary);
+		file.seekg(0, ios::beg);
+		fileHeader fhead;
+		file.read((char*)& fhead, sizeof(fileHeader));
+		int total_cols = fhead.num_columns;
+		int record_size = fhead.record_size;
+		vector<pair<bool, int>> cols;
+		int primary_column_number = -1;
+		for(int i = 0; i<total_cols; i++)
+		{
+			columnDefination colDef;
+			file.read((char*)& colDef, sizeof(columnDefination));
+			if(colDef.isPrimary) primary_column_number = i;
+			if(colDef.isString)
+				cols.push_back({1, colDef.size});
+			else
+				cols.push_back({0, 4});
+		}
+		file.seekg(0, ios::end);
+		long fileSize = file.tellg();
+		long totalRecords = (fileSize - 1024)/record_size;
+		file.seekg(1024, ios::beg);
+		map<int, string> dat_map;
+		while(totalRecords--)
+		{
+			// cout << "Parsing records for: " << filename << endl;
+			string record_as_string = "";
+			int primary_column_value = 0;
+			for(int i = 0; i<cols.size(); i++)
+			{
+				if(cols[i].first == 0)
+				{
+					if(i == primary_column_number)
+					{	
+						file.read((char*)& primary_column_value, sizeof(int));
+						record_as_string += " " + to_string(primary_column_value);	
+					}
+					else
+					{
+						int temp;
+						file.read((char*)& temp, sizeof(int));
+						record_as_string += " " + to_string(temp);
+					}
+				}
+				else
+				{
+					int size  = cols[i].second;
+					vector<char> buffer(size);
+					file.read(buffer.data(), size);
+					record_as_string += " " + string(buffer.data());
+				}
+			}
+			// cout << record_as_string << endl;
+			dat_map[primary_column_value] = record_as_string;
+		}
+		file.close();
+		main_map[filename] = dat_map;
+	}
+}
+void read(commandStruct input, map<string, map<int, string>> &main_map)
+{
+		string filename = input.tokens[0];
+		int key = stoi(input.tokens[2]);
+		cout << main_map[filename][key] << endl;
 }

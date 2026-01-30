@@ -1,7 +1,7 @@
 using namespace std;
 struct commandStruct
 {
-	uint32_t type; // 0: create, 1: add, 2: delete
+	uint32_t type; // 0: create, 1: add, 2: get
 	char tableName[32];
 	vector<string> tokens;
 };

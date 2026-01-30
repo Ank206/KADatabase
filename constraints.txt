@@ -1,0 +1,12 @@
+1. Primary key must be an Integer.
+2. The output data for the Read command will be a string.
+3. 
+
+
+
+
+
+
+
+map<string, map<int, string>> main_map;
+map<int, string> dat_map;
