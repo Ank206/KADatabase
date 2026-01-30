@@ -55,7 +55,7 @@ users get 1
 
 1.  **Clone the Repository**
     ```bash
-    git clone [https://github.com/YOUR_USERNAME/KADatabase.git](https://github.com/YOUR_USERNAME/KADatabase.git)
+    git clone https://github.com/YOUR_USERNAME/KADatabase.git
     cd KADatabase
     ```
 
