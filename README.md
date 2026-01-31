@@ -93,4 +93,4 @@ users get 1
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please open an issue or submit a pull request.
+Please refer to the Contibuting Guidelines.
