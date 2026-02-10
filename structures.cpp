@@ -15,8 +15,8 @@ struct fileHeader
 struct columnDefination
 {
 	char columnName[32];
-	bool isString = false; // then it's an int
+	bool isString = false;	// then it's an int
 	bool isPrimary = false; // for primary key
-	uint32_t size = 4;     // 4 for int and rest for the String size.
+	uint32_t size = 4;		// 4 for int and rest for the String size.
 };
-// columnDefination size: 32 + 1 + 1 + 4 = 38 bytes 
+// columnDefination size: 32 + 1 + 1 + 4 = 38 bytes

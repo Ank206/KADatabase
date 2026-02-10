@@ -4,9 +4,9 @@ commandStruct parser(string command)
 {
 	vector<string> tokens;
 	string tempString = "";
-	for(auto i: command)
+	for (auto i : command)
 	{
-		if(i != ' ')
+		if (i != ' ')
 		{
 			tempString.push_back(i);
 		}
@@ -16,31 +16,33 @@ commandStruct parser(string command)
 			tempString = "";
 		}
 	}
-	if(tempString != "") tokens.push_back(tempString);
+	if (tempString != "")
+		tokens.push_back(tempString);
 
 	commandStruct temp;
 
-	if (tokens.size() < 2) {
-        cout << "ERROR: Incomplete Command" << endl;
-        temp.type = -1;
-        return temp;
-    }
-	if(tokens[0] == "create")
+	if (tokens.size() < 2)
+	{
+		cout << "ERROR: Incomplete Command" << endl;
+		temp.type = -1;
+		return temp;
+	}
+	if (tokens[0] == "create")
 	{
 		temp.type = 0;
 		strncpy(temp.tableName, tokens[1].c_str(), 31);
 		temp.tableName[31] = '\0';
 		temp.tokens = tokens;
 	}
-	else if(tokens[1] == "add")
+	else if (tokens[1] == "add")
 	{
 		temp.type = 1;
 		strncpy(temp.tableName, tokens[0].c_str(), 31);
 		temp.tableName[31] = '\0';
 		temp.tokens = tokens;
 	}
-	else if(tokens[1] == "get")
-	{	
+	else if (tokens[1] == "get")
+	{
 		temp.type = 2;
 		strncpy(temp.tableName, tokens[0].c_str(), 31);
 		temp.tableName[31] = '\0';

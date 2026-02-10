@@ -23,36 +23,36 @@ using namespace std;
 template <typename T>
 class JobQueue
 {
-	private:
-		queue<T> queue;
-		mutex mtx;
-		condition_variable cv;
-	public:
-		void push(T item)
-		{
-			unique_lock<mutex> lock(mtx);
-			queue.push(item);
-			lock.unlock();
-			cv.notify_one();
-		}
-		T pop()
-		{
-			unique_lock<mutex> lock(mtx);
-			while(queue.empty())
-			{
-				cv.wait(lock);
-			}
-			T item = queue.front();
-			queue.pop();
-			return item;
-		}
-		bool empty()
-		{
-			lock_guard<mutex> lock(mtx);
-			return queue.empty();
-		}
-};
+private:
+	queue<T> queue;
+	mutex mtx;
+	condition_variable cv;
 
+public:
+	void push(T item)
+	{
+		unique_lock<mutex> lock(mtx);
+		queue.push(item);
+		lock.unlock();
+		cv.notify_one();
+	}
+	T pop()
+	{
+		unique_lock<mutex> lock(mtx);
+		while (queue.empty())
+		{
+			cv.wait(lock);
+		}
+		T item = queue.front();
+		queue.pop();
+		return item;
+	}
+	bool empty()
+	{
+		lock_guard<mutex> lock(mtx);
+		return queue.empty();
+	}
+};
 
 struct UserRecord
 {
@@ -68,106 +68,107 @@ struct DBJob
 	UserRecord temp;
 };
 
-
 class SimpleDB
 {
-	private: 
-			string filename;
-			fstream file;
-			unordered_map<int, long long> index;
-	public:
-			SimpleDB(string fname)
-			{
-				filename = fname;
-				file.open(filename, ios::in|ios::out|ios::binary);
+private:
+	string filename;
+	fstream file;
+	unordered_map<int, long long> index;
 
-				if(!file.is_open())
-				{
-					file.open(filename, ios::out|ios::binary);
-					file.close();
-					file.open(filename, ios::in|ios::out|ios::binary|ios::app);
-				}
-				rebuildIndex();
-			}
-			~SimpleDB()
-			{
-				if(file.is_open()) file.close();
-			}
+public:
+	SimpleDB(string fname)
+	{
+		filename = fname;
+		file.open(filename, ios::in | ios::out | ios::binary);
 
-			void rebuildIndex()
-			{
-				cout << "[System] Rebuilding Index table from Disk..." << endl;
-				file.clear();
-				file.seekg(0, ios::beg);
+		if (!file.is_open())
+		{
+			file.open(filename, ios::out | ios::binary);
+			file.close();
+			file.open(filename, ios::in | ios::out | ios::binary | ios::app);
+		}
+		rebuildIndex();
+	}
+	~SimpleDB()
+	{
+		if (file.is_open())
+			file.close();
+	}
 
-				UserRecord temp;
-				long long current_position = 0;
+	void rebuildIndex()
+	{
+		cout << "[System] Rebuilding Index table from Disk..." << endl;
+		file.clear();
+		file.seekg(0, ios::beg);
 
-				while(file.read((char*)& temp, sizeof(UserRecord)))
-				{
-					index[temp.id] = current_position;
-					current_position = file.tellg();
-				}
+		UserRecord temp;
+		long long current_position = 0;
 
-				file.clear();
+		while (file.read((char *)&temp, sizeof(UserRecord)))
+		{
+			index[temp.id] = current_position;
+			current_position = file.tellg();
+		}
 
-				cout << "[System] Index building complete." << endl;
-				cout << "Found " << index.size() << " records." << endl;
-			}
-			void insertUser(int id, string name, int age)
-			{
-				UserRecord temp;
-				temp.id = id;
-				strncpy(temp.username, name.c_str(), 31); 
-				temp.username[31] = '\0';
-				temp.age = age;
-				temp.active = true;
+		file.clear();
 
-				file.seekp(0, ios::end);
-				long long writePosition = file.tellp();
+		cout << "[System] Index building complete." << endl;
+		cout << "Found " << index.size() << " records." << endl;
+	}
+	void insertUser(int id, string name, int age)
+	{
+		UserRecord temp;
+		temp.id = id;
+		strncpy(temp.username, name.c_str(), 31);
+		temp.username[31] = '\0';
+		temp.age = age;
+		temp.active = true;
 
-				file.write((char*)& temp, sizeof(UserRecord));
-				file.flush();
+		file.seekp(0, ios::end);
+		long long writePosition = file.tellp();
 
-				index[id] = writePosition;
-				cout << "[Success] Saved User: " << name << " at offset " << writePosition << endl;
-			}
-			void getUser(int id)
-			{
-				if(index.find(id) == index.end())
-				{
-					cout << "[Fatal Error] User ID " << id << " does not exist." << endl;
-					return;
-				}
-				long long position = index[id];
-				file.seekg(position, ios::beg);
-				UserRecord temp;
-				file.read((char*)& temp, sizeof(UserRecord));
-				cout << endl;
-				cout << "--- Record Found ---" << endl;
-				cout << "ID: " << temp.id << endl;
-				cout << "Name: " << temp.username << endl;
-				cout << "Age: " << temp.age << endl;
-				cout << "--- End of Record ---" << endl;
-				cout << endl;
-			}
-			void getAllUser()
-			{
-				file.clear();
-				file.seekg(0, ios::beg);
-				UserRecord temp;
-				vector<UserRecord> data;
-				while(file.read((char*)& temp, sizeof(UserRecord)))
-				{
-					if(temp.active)
-						data.push_back(temp);
-				}
-				cout << "Found " << data.size() << " records." << endl;
+		file.write((char *)&temp, sizeof(UserRecord));
+		file.flush();
 
-				for(auto i: data)
-					cout << i.id << " | " << i.username << " | " << i.age << endl;
-				file.clear();
-			}
+		index[id] = writePosition;
+		cout << "[Success] Saved User: " << name << " at offset " << writePosition << endl;
+	}
+	void getUser(int id)
+	{
+		if (index.find(id) == index.end())
+		{
+			cout << "[Fatal Error] User ID " << id << " does not exist." << endl;
+			return;
+		}
+		long long position = index[id];
+		file.seekg(position, ios::beg);
+		UserRecord temp;
+		file.read((char *)&temp, sizeof(UserRecord));
+		cout << endl;
+		cout << "--- Record Found ---" << endl;
+		cout << "ID: " << temp.id << endl;
+		cout << "Name: " << temp.username << endl;
+		cout << "Age: " << temp.age << endl;
+		cout << "--- End of Record ---" << endl;
+		cout << endl;
+	}
+	void getAllUser()
+	{
+		file.clear();
+		file.seekg(0, ios::beg);
+		UserRecord temp;
+		vector<UserRecord> data;
+		while (file.read((char *)&temp, sizeof(UserRecord)))
+		{
+			if (temp.active)
+				data.push_back(temp);
+		}
+		cout << "Found " << data.size() << " records." << endl;
+
+		for (auto i : data)
+			cout << i.id << " | " << i.username << " | " << i.age << endl;
+		file.clear();
+	}
 };
 
 map<string, map<int, string>> main_map;
@@ -175,22 +176,22 @@ JobQueue<DBJob> workQueue;
 bool systemrunning = true;
 bool done = false;
 
-void backgroundWorker(SimpleDB* db)
+void backgroundWorker(SimpleDB *db)
 {
 	cout << "[System]: Background thread started." << endl;
-	while(systemrunning || !workQueue.empty())
+	while (systemrunning || !workQueue.empty())
 	{
 		DBJob job = workQueue.pop();
-		if(job.operationType == -1)
+		if (job.operationType == -1)
 		{
 			systemrunning = false;
 			break;
 		}
 		Sleep(10000);
-		if(job.operationType == 1)
+		if (job.operationType == 1)
 		{
-			db -> insertUser(job.temp.id, job.temp.username, job.temp.age);
-			cout << "Finished writing ID: " << job.temp.id<< endl;
+			db->insertUser(job.temp.id, job.temp.username, job.temp.age);
+			cout << "Finished writing ID: " << job.temp.id << endl;
 		}
 	}
 	cout << "[System]: Background thread stopped." << endl;
@@ -205,23 +206,23 @@ int main()
 	// thread worker(backgroundWorker, &db);
 	// worker.detach();
 
-	while(true)
+	while (true)
 	{
-		string command; 
+		string command;
 		getline(cin, command);
 		commandStruct temp = parser(command);
 		// cout << temp.type << endl;
 
-		if(temp.type == 0)
+		if (temp.type == 0)
 		{
 			// request for table creation.
 			tableCreator(temp);
 		}
-		else if(temp.type == 1)
+		else if (temp.type == 1)
 		{
 			write(temp);
 		}
-		else if(temp.type == 2)
+		else if (temp.type == 2)
 		{
 			indexation(main_map);
 			read(temp, main_map);
@@ -244,7 +245,7 @@ int main()
 		// 	cout << "Enter ID: "; cin >> id;
 		// 	cin.ignore();
 
-		// 	cout << "Enter Name: "; 
+		// 	cout << "Enter Name: ";
 		// 	getline(cin, name);
 
 		// 	cout << "Enter Age: "; cin >> age;
