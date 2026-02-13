@@ -140,6 +140,27 @@ void indexation(map<string, map<int, pair<int, string>>> &main_map)
 		file.close();
 		main_map[filename] = dat_map;
 	}
+	// reading of the tablename.del files from the Database.
+	vector<string> del_files;
+	for (const auto &entry : filesystem::directory_iterator(path))
+	{
+		if (entry.is_regular_file() && entry.path().extension() == ".del")
+		{
+			del_files.push_back(entry.path().stem().string());
+		}
+	}
+	for(auto del_file: del_files)
+	{
+		fstream file;
+		file.open(del_file + ".del", ios::in | ios::binary);
+		file.seekg(0, ios::beg);
+		int deleted_key = -1;
+		while(file.read((char *)&deleted_key, sizeof(deleted_key)))
+		{
+			main_map[del_file][deleted_key].first = 1;
+		}
+		file.close();
+	}
 }
 void read(commandStruct input, map<string, map<int, pair<int, string>>> &main_map)
 {
@@ -157,11 +178,12 @@ void del(commandStruct input, map<string, map<int, pair<int, string>>> &main_map
 	// We will write the data in the table_name_del.dat file
 	string tableName = input.tokens[0];
 	int key = stoi(input.tokens[2]);
-	string fileName = tableName + "_del.dat";
+	string fileName = tableName + ".del";
 	fstream file;
-	file.open(fileName, ios::in | ios::out | ios::binary);
+	file.open(fileName, ios::app | ios::out | ios::binary);
 	file.seekp(0, ios::end);
 	file.write((char *)&key, sizeof(int));
+	file.flush();
 	file.close();
 
 	// Safety checks, so we don't accidentally keys, that don't even exsist.

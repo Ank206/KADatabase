@@ -27,13 +27,13 @@ map<string, map<int, pair<int, string>>> main_map;
 int main()
 {
 	cout << "Welcome to KADatabase" << endl;
+	indexation(main_map);
 
 	while (true)
 	{
 		string command;
 		getline(cin, command);
 		commandStruct temp = parser(command);
-		indexation(main_map);
 		// cout << temp.type << endl;
 		if (temp.type == 0)
 		{
