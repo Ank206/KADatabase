@@ -48,6 +48,13 @@ commandStruct parser(string command)
 		temp.tableName[31] = '\0';
 		temp.tokens = tokens;
 	}
+	else if(tokens[1] == "delete")
+	{
+		temp.type = 3;
+		strncpy(temp.tableName, tokens[0].c_str(), 31);
+		temp.tableName[31] = '\0';
+		temp.tokens = tokens;
+	}
 	else
 	{
 		cout << "ERROR: Invalid Command" << endl;

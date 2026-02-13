@@ -42,6 +42,7 @@ void tableCreator(commandStruct input)
 		colDefs.push_back(column);
 	}
 	fhead.record_size = recordSize;
+	cout << "Creation command parsed successfully." << endl;
 
 	fstream file;
 	string filename = string(input.tableName) + ".dat";
