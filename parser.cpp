@@ -55,6 +55,10 @@ commandStruct parser(string command)
 		temp.tableName[31] = '\0';
 		temp.tokens = tokens;
 	}
+	else if(tokens[1] == "defrag")
+	{
+		temp.type = 4;
+	}
 	else
 	{
 		cout << "ERROR: Invalid Command" << endl;

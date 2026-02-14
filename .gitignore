@@ -1,7 +1,8 @@
 *.exe
 .env
 .env.local
-*.dat
 *.o
 .vscode/
 *.del
+*.temp
+*.dat

@@ -53,6 +53,12 @@ int main()
 		{
 			del(temp, main_map);
 		}
+		else if(temp.type == 4)
+		{
+			cout << "Starting defragmentation." << endl;
+			defragmentation();
+			cout << "Completed defragmentation." << endl;
+		}
 		else
 		{
 			cout << "[ERROR]: Fatal Error, wrong command passed." << endl;

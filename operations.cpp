@@ -178,6 +178,13 @@ void del(commandStruct input, map<string, map<int, pair<int, string>>> &main_map
 	// We will write the data in the table_name_del.dat file
 	string tableName = input.tokens[0];
 	int key = stoi(input.tokens[2]);
+
+	if(main_map[tableName].find(key) == main_map[tableName].end())
+	{
+		cout << "Key value doesn't exist in the table." << endl;
+		return;
+	}
+
 	string fileName = tableName + ".del";
 	fstream file;
 	file.open(fileName, ios::app | ios::out | ios::binary);
@@ -185,14 +192,141 @@ void del(commandStruct input, map<string, map<int, pair<int, string>>> &main_map
 	file.write((char *)&key, sizeof(int));
 	file.flush();
 	file.close();
-
-	// Safety checks, so we don't accidentally keys, that don't even exsist.
-	if(main_map[tableName].find(key) == main_map[tableName].end())
-	{
-		cout << "Key value doesn't exist in the table." << endl;
-		return;
-	}
-
+	
 	main_map[tableName][key].first = 1;
 	cout << "Key value: " << key << " deleted from " << tableName << "." << endl;
+}
+
+void defragmentation()
+{
+	// read all the datas for all the files from all the tablenames 
+	// and then we do the final cleanup 
+	vector<string> del_files;
+	string path = ".";
+	for (const auto &entry : filesystem::directory_iterator(path))
+	{
+		if (entry.is_regular_file() && entry.path().extension() == ".del")
+		{
+			del_files.push_back(entry.path().stem().string());
+		}
+	}
+	for(auto del_file: del_files)
+	{
+		map<int, bool> deleted_keys_for_this_file;
+		fstream file1;
+		file1.open(del_file + ".del", ios::in | ios::binary);
+		file1.seekg(0, ios::beg);
+		int deleted_key = -1;
+		while(file1.read((char *)&deleted_key, sizeof(deleted_key)))
+		{
+			deleted_keys_for_this_file[deleted_key] = true;
+		}
+		file1.close();
+
+		fstream file, file2;
+		file2.open(del_file + ".temp", ios:: out | ios::binary | ios::trunc);
+		file.open(del_file + ".dat", ios::in | ios::binary);
+		file.seekg(0, ios::beg);
+		file2.seekg(0, ios::beg);
+		
+		fileHeader fhead;
+		file.read((char *)&fhead, sizeof(fileHeader));
+		file2.write((char *)&fhead, sizeof(fileHeader));
+
+		int total_cols = fhead.num_columns;
+		int record_size = fhead.record_size;
+		
+		vector<pair<bool, int>> cols;
+		int primary_column_number = -1;
+		
+		for (int i = 0; i < total_cols; i++)
+		{
+			columnDefination colDef;
+			file.read((char *)&colDef, sizeof(columnDefination));
+			file2.write((char *)&colDef, sizeof(columnDefination));
+			if (colDef.isPrimary)
+				primary_column_number = i;
+			if (colDef.isString)
+				cols.push_back({1, colDef.size});
+			else
+				cols.push_back({0, 4});
+		}
+
+		long currentPos = file2.tellp();
+		if (currentPos < 1024)
+		{
+			vector<char> padding(1024 - currentPos, 0);
+			file2.write(padding.data(), padding.size());
+		}
+
+		file.seekg(0, ios::end);
+		long fileSize = file.tellg();
+		long totalRecords = (fileSize - 1024) / record_size;
+		file.seekg(1024, ios::beg);
+		file2.seekp(1024, ios::beg);
+		map<int, pair<int, string>> dat_map;
+		while (totalRecords--)
+		{
+			int primary_column_value = 0;
+			for (int i = 0; i < cols.size(); i++)
+			{
+				if (cols[i].first == 0)
+				{
+					if (i == primary_column_number)
+					{
+						file.read((char *)&primary_column_value, sizeof(int));
+					}
+					else
+					{
+						int temp;
+						file.read((char *)&temp, sizeof(int));
+					}
+				}
+				else
+				{
+					int size = cols[i].second;
+					vector<char> buffer(size);
+					file.read(buffer.data(), size);
+				}
+			}
+			long currentPos = file.tellg();
+			if(deleted_keys_for_this_file[primary_column_value] == 0)
+			{
+				currentPos -= record_size;
+				file.seekg(currentPos, ios::beg);
+				vector<char> record_buffer(record_size);
+				file.read(record_buffer.data(), record_size);
+				file2.write(record_buffer.data(), record_size);
+				// for (int i = 0; i < cols.size(); i++)
+				// {
+				// 	if (cols[i].first == 0)
+				// 	{
+				// 		if (i == primary_column_number)
+				// 		{
+				// 			file.read((char *)&primary_column_value, sizeof(int));
+				// 			file2.write((char *)&primary_column_value, sizeof(int))
+				// 		}
+				// 		else
+				// 		{
+				// 			int temp;
+				// 			file.read((char *)&temp, sizeof(int));
+				// 			file2.write((char *)&temp, sizeof(int));
+				// 		}
+				// 	}
+				// 	else
+				// 	{
+				// 		int size = cols[i].second;
+				// 		vector<char> buffer(size);
+				// 		file.read(buffer.data(), size);
+				// 		file2.write(buffer.data(), size);
+				// 	}
+				// }
+			}
+		}
+		file.close();
+		file2.close();
+		filesystem::remove(del_file + ".dat");
+		filesystem::remove(del_file + ".del");
+		filesystem::rename(del_file + ".temp", del_file + ".dat");
+	}
 }
